@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador de Gestión de Mantenimiento — Proyecto de Título LHD · CODELCO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  --bg:#eef1f5; --card:#ffffff; --card2:#f7f9fb; --head:#1b2836; --head2:#243444;
+  --tx:#16202b; --tx2:#4a5765; --tx3:#7b8794;
+  --bd:#d8dee6; --bd2:#e8edf2;
+  --ac:#c2410c; --ac2:#ea580c; --acs:rgba(194,65,12,.09); --acb:rgba(194,65,12,.35);
+  --red:#c62828; --reds:#fdeaea; --redb:#f3b9b9;
+  --amb:#a16207; --ambs:#fdf5e2; --ambb:#eed9a0;
+  --grn:#166534; --grns:#e9f6ec; --grnb:#aed8bb;
+  --blu:#1d4ed8; --blus:#e8eefc; --blub:#b9caf3;
+  --row:#f4f7fa;
+  --hm:#eaf0fd; --hm2:#e2eafb; --hd_:#fdefe6; --hd2:#fbe6d8;
+  --hr:#f1ecfd; --hr2:#e9e1fb;
+  --ff:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --fm:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+}
+[data-theme="dark"]{
+  --bg:#161a20; --card:#1f242c; --card2:#262c35; --head:#0f1319; --head2:#1a2028;
+  --tx:#eef1f5; --tx2:#bcc5d1; --tx3:#8b95a3;
+  --bd:#333b46; --bd2:#2a313a;
+  --ac:#fb923c; --ac2:#fdba74; --acs:rgba(251,146,60,.14); --acb:rgba(251,146,60,.42);
+  --red:#f87171; --reds:rgba(248,113,113,.14); --redb:rgba(248,113,113,.38);
+  --amb:#fbbf24; --ambs:rgba(251,191,36,.13); --ambb:rgba(251,191,36,.36);
+  --grn:#4ade80; --grns:rgba(74,222,128,.13); --grnb:rgba(74,222,128,.34);
+  --blu:#7dabff; --blus:rgba(125,171,255,.13); --blub:rgba(125,171,255,.34);
+  --row:#232932;
+  --hm:rgba(125,171,255,.09); --hm2:rgba(125,171,255,.13);
+  --hd_:rgba(251,146,60,.10); --hd2:rgba(251,146,60,.15);
+  --hr:rgba(196,166,255,.11); --hr2:rgba(196,166,255,.16);
+}
+html,body{margin:0;padding:0;height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--tx);font-family:var(--ff);font-size:13px;line-height:1.45;
+  display:flex;flex-direction:column;height:100vh;-webkit-font-smoothing:antialiased}
+
+/* ── barra superior ───────────────────────────────── */
+.top{flex:none;display:flex;align-items:center;gap:12px;height:48px;padding:0 14px;
+  background:var(--head);color:#e8edf3;border-bottom:1px solid rgba(0,0,0,.3)}
+.mark{width:32px;height:32px;border-radius:7px;display:grid;place-items:center;flex:none;
+  background:linear-gradient(135deg,var(--ac),var(--ac2));color:#fff;font-weight:800;font-size:11px;letter-spacing:.02em}
+.top h1{margin:0;font-size:14px;font-weight:700;letter-spacing:-.01em;white-space:nowrap}
+.top .sub{font-size:10.5px;color:#94a3b3;white-space:nowrap}
+.top .sp{flex:1}
+.chip{font-size:10.5px;padding:4px 9px;border-radius:6px;background:rgba(255,255,255,.09);
+  color:#c9d4e0;white-space:nowrap;border:1px solid rgba(255,255,255,.09)}
+.chip b{color:#fff;font-weight:600}
+.chip.mq{background:rgba(251,191,36,.16);border-color:rgba(251,191,36,.4);color:#fcd34d;font-weight:700}
+.tgl{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);color:#c9d4e0;
+  border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--ff)}
+.tgl:hover{background:rgba(255,255,255,.16)}
+
+/* ── pestañas de módulo ───────────────────────────── */
+.mods{flex:none;display:flex;background:var(--card);border-bottom:1px solid var(--bd);padding:0 8px;gap:2px;overflow-x:auto}
+.mod{border:0;background:none;font-family:var(--ff);cursor:pointer;padding:9px 14px 8px;
+  border-bottom:2.5px solid transparent;color:var(--tx2);text-align:left;white-space:nowrap;transition:.14s}
+.mod:hover{background:var(--card2);color:var(--tx)}
+.mod .cd{display:block;font-family:var(--fm);font-size:9.5px;color:var(--tx3);letter-spacing:.04em}
+.mod .nm{display:block;font-size:12.5px;font-weight:600;margin-top:1px}
+.mod.on{border-bottom-color:var(--ac);color:var(--ac)}
+.mod.on .cd{color:var(--ac2)}
+.mod.on .nm{font-weight:700}
+
+/* ── acentos de módulo (Programa blindado / Bloqueo y penalización) ── */
+.mod-g{background:#e9f6ec}
+.mod-g .cd{color:#15803d}
+.mod-g:hover{background:#dcf0e1}
+.mod-g.on{background:#16a34a;border-bottom-color:#15803d;color:#fff}
+.mod-g.on .cd{color:#d7f3e1}
+.mod-r{background:#fceceb}
+.mod-r .cd{color:#b91c1c}
+.mod-r:hover{background:#f9dbd9}
+.mod-r.on{background:#dc2626;border-bottom-color:#b91c1c;color:#fff}
+.mod-r.on .cd{color:#fbd6d3}
+[data-theme="dark"] .mod-g{background:rgba(74,222,128,.10)}
+[data-theme="dark"] .mod-g .cd{color:#4ade80}
+[data-theme="dark"] .mod-g:hover{background:rgba(74,222,128,.17)}
+[data-theme="dark"] .mod-g.on{background:#16a34a;border-bottom-color:#4ade80;color:#0b1f13}
+[data-theme="dark"] .mod-g.on .cd{color:#0b1f13}
+[data-theme="dark"] .mod-r{background:rgba(248,113,113,.10)}
+[data-theme="dark"] .mod-r .cd{color:#f87171}
+[data-theme="dark"] .mod-r:hover{background:rgba(248,113,113,.17)}
+[data-theme="dark"] .mod-r.on{background:#dc2626;border-bottom-color:#f87171;color:#2a0b0a}
+[data-theme="dark"] .mod-r.on .cd{color:#2a0b0a}
+
+/* ── barra de contexto (orden en foco) ────────────── */
+.ctx{flex:none;display:flex;align-items:center;gap:10px;padding:7px 14px;background:var(--acs);
+  border-bottom:1px solid var(--bd);font-size:12.5px;color:var(--tx2);flex-wrap:wrap}
+.ctx .lb{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);font-weight:700}
+.ctx .oid{font-family:var(--fm);font-weight:600;font-size:13px;color:var(--tx)}
+.ctx .kv{font-size:11.5px;padding:2px 8px;border-radius:5px;background:var(--card);border:1px solid var(--bd);white-space:nowrap}
+.ctx .kv b{font-family:var(--fm)}
+.ctx .sp{flex:1}
+
+/* ── área de trabajo ──────────────────────────────── */
+main{flex:1;min-height:0;padding:12px;overflow:hidden}
+.pane{display:none;height:100%;gap:12px}
+.pane.on{display:flex}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;display:flex;
+  flex-direction:column;min-height:0;min-width:0;overflow:hidden}
+.ch{flex:none;padding:9px 13px 8px;border-bottom:1px solid var(--bd2);background:var(--card2)}
+.ch h2{margin:0;font-size:13.5px;font-weight:700;letter-spacing:-.01em}
+.ch p{margin:2px 0 0;font-size:11px;color:var(--tx3);line-height:1.4}
+.cb{flex:1;min-height:0;overflow:auto;padding:0}
+.cb.pad{padding:12px 13px}
+.cf{flex:none;padding:8px 13px;border-top:1px solid var(--bd2);background:var(--card2);
+  font-size:11px;color:var(--tx3);line-height:1.45}
+.cb::-webkit-scrollbar,main ::-webkit-scrollbar{width:9px;height:9px}
+.cb::-webkit-scrollbar-thumb,main ::-webkit-scrollbar-thumb{background:var(--bd);border-radius:5px}
+
+/* ── tablas ───────────────────────────────────────── */
+table.t{width:100%;border-collapse:collapse;font-size:12.5px}
+table.t thead th{position:sticky;top:0;z-index:2;background:var(--card2);text-align:left;
+  font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--tx2);
+  padding:7px 9px;border-bottom:1.5px solid var(--bd);white-space:nowrap}
+table.t thead tr.org th{top:29px;font-size:9.5px;font-family:var(--fm);text-transform:none;letter-spacing:0;
+  font-weight:400;color:var(--tx3);padding:3px 9px;border-bottom:1px solid var(--bd);background:var(--card2)}
+table.t td{padding:6px 9px;border-bottom:1px solid var(--bd2);color:var(--tx2);vertical-align:middle}
+table.t td.k{color:var(--tx);font-weight:600}
+table.t td.num,table.t th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--fm);font-size:12px}
+table.t tbody tr:nth-child(even){background:var(--row)}
+table.t tbody tr.pick{cursor:pointer}
+table.t tbody tr.pick:hover{background:var(--acs)}
+table.t tbody tr.on,table.t tbody tr.on:nth-child(even){background:var(--acs);box-shadow:inset 3px 0 0 var(--ac)}
+table.t tbody tr.on td{color:var(--tx)}
+[data-tip]{cursor:help;text-decoration:underline dotted var(--tx3);text-underline-offset:3px}
+
+/* ── filas desplegables ───────────────────────────── */
+table.t tbody tr.exp{cursor:pointer}
+table.t tbody tr.exp:hover{background:var(--acs)}
+table.t tbody tr.exp .cv{display:inline-block;width:11px;color:var(--tx3);font-size:10px;
+  transition:transform .16s;transform-origin:50% 50%}
+table.t tbody tr.exp.op .cv{transform:rotate(90deg);color:var(--ac)}
+table.t tbody tr.exp.op td{background:var(--acs);font-weight:600}
+table.t tbody tr.sub td{padding:0;background:var(--card2);border-bottom:1px solid var(--bd)}
+.kitbox{padding:9px 13px 12px 34px}
+.kitl{border-collapse:separate;border-spacing:0;font-size:12px;background:var(--card);
+  border:1px solid var(--bd);border-radius:8px;overflow:hidden;min-width:290px}
+.kitl th{background:var(--card2);font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;
+  color:var(--tx3);font-weight:700;padding:5px 10px;text-align:left;border-bottom:1px solid var(--bd)}
+.kitl td{padding:5px 10px;border-bottom:1px solid var(--bd2);color:var(--tx2)}
+.kitl tr:last-child td{border-bottom:0}
+.kitl td.ix{width:22px;color:var(--tx3);font-family:var(--fm);font-size:10.5px}
+.kitl .q{text-align:right;font-family:var(--fm);font-weight:700;color:var(--tx)}
+.kitl td.q::after{content:' u';font-weight:400;color:var(--tx3);font-size:10.5px}
+
+/* ── panel de capacidad ───────────────────────────── */
+.capwrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap;justify-content:center}
+.cn{font-family:var(--fm);font-size:50px;font-weight:800;letter-spacing:-.035em;line-height:.92;color:var(--tx)}
+.cn span{font-size:18px;font-weight:700;color:var(--tx3);margin-left:5px;letter-spacing:0}
+.cl{font-size:12.5px;font-weight:700;color:var(--tx2);margin-top:7px;line-height:1.3}
+.cs{font-size:11px;color:var(--tx3);margin-top:5px;line-height:1.5}
+.donut{flex:none}
+.donut circle{fill:none;transform:rotate(-90deg);transform-origin:50% 50%}
+.dt1{font-family:var(--fm);font-size:25px;font-weight:800;fill:var(--tx)}
+.dt2{font-size:9px;fill:var(--tx3);text-transform:uppercase;letter-spacing:.07em;font-weight:700}
+.capl{display:flex;flex-direction:column;gap:8px;font-size:12px;color:var(--tx2)}
+.capl span{display:flex;align-items:center;gap:7px;white-space:nowrap}
+.capl i{width:11px;height:11px;border-radius:3px;display:inline-block;flex:none}
+.capl b{font-family:var(--fm);margin-left:auto;padding-left:14px;color:var(--tx)}
+.capnote{margin-top:16px;padding:10px 12px;border-radius:9px;background:var(--reds);
+  border:1px solid var(--redb);font-size:12.5px;line-height:1.55;color:var(--tx2)}
+.capnote .hl{font-family:var(--fm);font-size:17px;font-weight:800;color:var(--red)}
+
+/* ── acentos por panel ────────────────────────────── */
+[data-acc]{--k:var(--tx3);--ks:var(--card2)}
+[data-acc="blue"]{--k:#1d4ed8;--ks:#eaf0fd}
+[data-acc="teal"]{--k:#0e7490;--ks:#e6f4f7}
+[data-acc="green"]{--k:#15803d;--ks:#eaf6ed}
+[data-acc="amber"]{--k:#b45309;--ks:#fdf3e3}
+[data-acc="red"]{--k:#b91c1c;--ks:#fceceb}
+[data-acc="violet"]{--k:#6d28d9;--ks:#f0ebfd}
+[data-acc="copper"]{--k:#c2410c;--ks:#fdefe6}
+[data-acc="slate"]{--k:#334155;--ks:#eef1f5}
+[data-theme="dark"] [data-acc="blue"]{--k:#7dabff;--ks:rgba(125,171,255,.10)}
+[data-theme="dark"] [data-acc="teal"]{--k:#5ec8dd;--ks:rgba(94,200,221,.10)}
+[data-theme="dark"] [data-acc="green"]{--k:#4ade80;--ks:rgba(74,222,128,.10)}
+[data-theme="dark"] [data-acc="amber"]{--k:#fbbf24;--ks:rgba(251,191,36,.10)}
+[data-theme="dark"] [data-acc="red"]{--k:#f87171;--ks:rgba(248,113,113,.10)}
+[data-theme="dark"] [data-acc="violet"]{--k:#c4a6ff;--ks:rgba(196,166,255,.10)}
+[data-theme="dark"] [data-acc="copper"]{--k:#fb923c;--ks:rgba(251,146,60,.10)}
+[data-theme="dark"] [data-acc="slate"]{--k:#cbd5e1;--ks:rgba(203,213,225,.08)}
+.card[data-acc]{border-top:3px solid var(--k)}
+.card[data-acc] .ch{background:var(--ks);border-bottom-color:var(--k)}
+.cht{display:flex;align-items:center;gap:8px}
+.pin{flex:none;width:20px;height:20px;border-radius:6px;display:grid;place-items:center;
+  background:var(--k);color:#fff;font-size:11px;font-weight:800;font-family:var(--fm)}
+[data-theme="dark"] .pin{color:#12161c}
+.ch{cursor:pointer;position:relative;transition:.15s}
+.ch:hover{filter:brightness(.97)}
+[data-theme="dark"] .ch:hover{filter:brightness(1.18)}
+.ch::after{content:'';position:absolute;right:11px;top:11px;width:13px;height:13px;border-radius:3px;
+  border:1.5px solid var(--k);opacity:.32;transition:.15s}
+.ch:hover::after{opacity:.75}
+.card.spot .ch::after{background:var(--k);opacity:1}
+main.spotting .card:not(.spot){opacity:.26;filter:saturate(.25)}
+main .card{transition:opacity .22s,filter .22s}
+main.spotting .card.spot{box-shadow:0 0 0 2px var(--k),0 10px 30px rgba(0,0,0,.10)}
+
+/* ── resalte de columnas ──────────────────────────── */
+table.t th.hm,table.t td.hm{background:var(--hm)}
+table.t th.hd,table.t td.hd{background:var(--hd_)}
+table.t th.hr,table.t td.hr{background:var(--hr)}
+table.t tbody tr:nth-child(even) td.hr{background:var(--hr2)}
+table.t td.hr{font-weight:700;color:var(--tx)}
+table.t tbody tr:nth-child(even) td.hm{background:var(--hm2)}
+table.t tbody tr:nth-child(even) td.hd{background:var(--hd2)}
+table.t td.hd{font-weight:700;color:var(--tx)}
+
+/* ── piezas ───────────────────────────────────────── */
+.d{width:9px;height:9px;border-radius:50%;display:inline-block;vertical-align:-1px;margin-right:5px}
+.d-g{background:#16a34a} .d-a{background:#d97706} .d-r{background:#dc2626}
+.t-g{color:var(--grn);font-weight:600} .t-a{color:var(--amb);font-weight:600} .t-r{color:var(--red);font-weight:600}
+.bg{display:inline-block;padding:1px 7px;border-radius:5px;font-size:11px;font-weight:700;border:1px solid}
+.b1{background:var(--reds);color:var(--red);border-color:var(--redb)}
+.b2{background:var(--ambs);color:var(--amb);border-color:var(--ambb)}
+.b3{background:var(--card2);color:var(--tx3);border-color:var(--bd)}
+.bs{background:var(--blus);color:var(--blu);border-color:var(--blub)}
+.alert{padding:9px 12px;border-radius:8px;font-size:12.5px;line-height:1.5;border:1px solid;margin:12px 13px 0}
+.a-g{background:var(--grns);color:var(--grn);border-color:var(--grnb)}
+.a-a{background:var(--ambs);color:var(--amb);border-color:var(--ambb)}
+.a-r{background:var(--reds);color:var(--red);border-color:var(--redb)}
+.fx{background:var(--card2);border:1px solid var(--bd);border-left:3px solid var(--ac);
+  border-radius:0 8px 8px 0;padding:9px 12px;margin-bottom:9px}
+.fx .eq{font-size:14.5px;font-weight:600;color:var(--tx);letter-spacing:-.01em}
+.fx .nt{font-size:11px;color:var(--tx3);margin-top:4px;line-height:1.45}
+.kpis{display:flex;gap:9px;margin-bottom:12px}
+.kpi{flex:1;background:var(--card2);border:1px solid var(--bd);border-radius:9px;padding:9px 11px}
+.kpi .v{font-size:26px;font-weight:800;line-height:1;letter-spacing:-.02em}
+.kpi .l{font-size:10.5px;color:var(--tx3);text-transform:uppercase;letter-spacing:.04em;margin-top:4px}
+.rng{-webkit-appearance:none;appearance:none;width:100%;height:5px;border-radius:3px;background:var(--bd);outline:none;cursor:pointer}
+.rng::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;border-radius:50%;background:var(--ac);
+  cursor:pointer;box-shadow:0 0 0 3px var(--acs)}
+.leg{font-size:11.5px;color:var(--tx2);line-height:1.6}
+
+/* ── barra de estado ──────────────────────────────── */
+
+/* ── tooltip propio ───────────────────────────────── */
+#tip{position:fixed;z-index:999;max-width:290px;background:var(--head);color:#e8edf3;
+  font-size:11.5px;line-height:1.45;padding:7px 10px;border-radius:7px;pointer-events:none;
+  box-shadow:0 6px 20px rgba(0,0,0,.28);opacity:0;transition:opacity .12s;font-family:var(--ff)}
+#tip.on{opacity:1}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="mark">PM</div>
+  <div>
+    <h1>Simulador de Gestión de Mantenimiento — Flota LHD</h1>
+    <div class="sub">Proceso propuesto (TO-BE) · Chuquicamata Subterránea · Codelco</div>
+  </div>
+  <div class="sp"></div>
+  <div class="chip">Período <b>dic-2025 → abr-2026</b></div>
+  <div class="chip">Flota <b>7 LHD</b></div>
+  <div class="chip mq">MAQUETA</div>
+  <button class="tgl" id="thm">Tema oscuro</button>
+</header>
+
+<nav class="mods" id="mods">
+  <button class="mod on" data-p="p1"><span class="cd">ZPM01</span><span class="nm">Parametrización</span></button>
+  <button class="mod" data-p="p2"><span class="cd">ZPM02</span><span class="nm">Cola de despacho</span></button>
+  <button class="mod" data-p="p3"><span class="cd">ZPM03</span><span class="nm">Semáforo de repuestos</span></button>
+  <button class="mod mod-g" data-p="p4"><span class="cd">ZPM04</span><span class="nm">Programa blindado</span></button>
+  <button class="mod mod-r" data-p="p5"><span class="cd">ZPM05</span><span class="nm">Bloqueo y penalización</span></button>
+  <button class="mod" data-p="p6"><span class="cd">ZMM01</span><span class="nm">Abastecimiento</span></button>
+</nav>
+
+
+<main>
+  <!-- ══ P1 · PARAMETRIZACIÓN ══ -->
+  <div class="pane on" id="p1" style="flex-direction:column">
+    <div style="display:flex;gap:12px;flex:1.1;min-height:0">
+      <div class="card" style="flex:1" data-acc="blue">
+        <div class="ch"><div class="cht"><span class="pin">A</span><h2>Criticidad por equipo</h2></div><p>P y S normalizadas de 1 a 5 contra el máximo de la flota · C = P × S</p></div>
+        <div class="cb"><table class="t" id="tEq"></table></div>
+        <div class="cf">LE007 queda fuera del cálculo: estuvo todo el período fuera de servicio como equipo donante de repuestos. Flota operativa = 7 equipos.</div>
+      </div>
+      <div class="card" style="flex:1.05" data-acc="teal">
+        <div class="ch"><div class="cht"><span class="pin">B</span><h2>Criticidad por sistema</h2></div><p>Los 11 sistemas del período · 408 eventos de indisponibilidad</p></div>
+        <div class="cb"><table class="t" id="tSis"></table></div>
+      </div>
+    </div>
+    <div class="card" style="flex:.9;margin-top:12px" data-acc="amber">
+      <div class="ch"><div class="cht"><span class="pin">C</span><h2>Kit de componentes por tipo de falla</h2></div>
+        <p style="color:var(--amb)">Valores ilustrativos — en el modelo real es la lista de materiales que SAP MM asocia al modo de falla</p></div>
+      <div class="cb"><table class="t" id="tKit"></table></div>
+      </div>
+  </div>
+
+  <!-- ══ P2 · COLA ══ -->
+  <div class="pane" id="p2">
+    <div class="card" style="flex:1" data-acc="copper">
+      <div class="ch"><div class="cht"><span class="pin">A</span><h2>Órdenes del backlog ordenadas por criticidad</h2></div>
+        <p>El orden se fija antes de programar, con un criterio explícito. Seleccioná una orden para seguirla por el resto del flujo.</p></div>
+      <div class="cb"><table class="t" id="tCola"></table></div>
+      <div class="cf">Banda <b>P1</b>: C sistema ≥ 12 <b>y</b> C equipo ≥ 20 — chasis, hidráulico o tren de potencia en LE002, LE006 o LE001. &nbsp;<b>P2</b>: una de las dos condiciones. &nbsp;<b>P3</b>: ninguna. &nbsp;<b>SEG</b>: falla de seguridad, va por vía de excepción con independencia del puntaje.</div>
+    </div>
+  </div>
+
+  <!-- ══ P3 · SEMÁFORO ══ -->
+  <div class="pane" id="p3">
+    <div class="card" style="flex:1.15" data-acc="blue">
+      <div class="ch"><div class="cht"><span class="pin">A</span><h2>Semáforo de la cola completa</h2></div>
+        <p>Cada orden reserva su material al pasar: una orden de mayor prioridad puede dejar sin stock a la siguiente</p></div>
+      <div class="cb"><table class="t" id="tSemAll"></table></div>
+    </div>
+    <div class="card" style="flex:1" data-acc="copper">
+      <div class="ch"><div class="cht"><span class="pin">B</span><h2>Verificación de material — orden seleccionada</h2></div>
+        <p>Kit de la orden contra el stock disponible al momento de evaluarla</p></div>
+      <div class="cb"><table class="t" id="tSem"></table></div>
+      <div id="ver" class="alert" style="margin-bottom:12px"></div>
+    </div>
+  </div>
+
+  <!-- ══ P4 · PROGRAMA ══ -->
+  <div class="pane" id="p4">
+    <div class="card" style="flex:1.35" data-acc="green">
+      <div class="ch"><div class="cht"><span class="pin">A</span><h2>Programa semanal publicado</h2></div>
+        <p id="progSub"></p></div>
+      <div class="cb"><table class="t" id="tProg"></table></div>
+      <div class="cf" id="progF"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;flex:1;min-width:0">
+      <div class="card" style="flex:1" data-acc="amber">
+        <div class="ch"><div class="cht"><span class="pin">B</span><h2>Capacidad de la semana</h2></div>
+          <p>Horas-hombre del lote evaluado &middot; capacidad ofertada del taller: 733,9 HH/semana</p></div>
+        <div class="cb pad" id="capBox"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ P5 · BLOQUEO ══ -->
+  <div class="pane" id="p5">
+    <div class="card" style="flex:1" data-acc="red">
+      <div class="ch"><div class="cht"><span class="pin">A</span><h2>Órdenes retenidas — ninguna se pierde</h2></div>
+        <p>Quedan bloqueadas con la causa registrada y reingresan solas al semáforo cuando llega el material</p></div>
+      <div class="cb"><table class="t" id="tBloq"></table></div>
+      <div class="cf" id="bloqF"></div>
+    </div>
+    <div class="card" style="flex:1.05" data-acc="amber">
+      <div class="ch"><div class="cht"><span class="pin">B</span><h2>Penalización por insumo</h2></div>
+        <p>Cada bloqueo queda registrado como evento contra el componente que lo causó, ponderado por la criticidad de la orden que trabó</p></div>
+      <div class="cb"><table class="t" id="tPen"></table></div>
+      <div class="cf"><b>Penalización = Σ peso de banda</b> &nbsp;·&nbsp; P1 y SEG = 3 · P2 = 2 · P3 = 1. No todos los quiebres pesan igual: trabar una orden de chasis en LE002 vale más que trabar una de cabina en LE005. Exige el campo obligatorio de causa de diferimiento — hoy sólo 30 de 591 líneas lo declaran.</div>
+    </div>
+  </div>
+
+  <!-- ══ P6 · ABASTECIMIENTO ══ -->
+  <div class="pane" id="p6">
+    <div class="card" style="flex:.82" data-acc="slate">
+      <div class="ch"><div class="cht"><span class="pin">A</span><h2>Modelo de cálculo</h2></div><p>Croston–SBA con α = 0,2 para demanda intermitente</p></div>
+      <div class="cb pad">
+        <div class="fx" style="border-left-color:var(--blu)"><div class="eq">z<sub>t</sub> = α · q<sub>t</sub> + (1 − α) · z<sub>t−1</sub></div>
+          <div class="nt"><b>q<sub>t</sub></b> = unidades consumidas en el evento t. Estima el <b>tamaño</b> de la demanda cuando ocurre.</div></div>
+        <div class="fx" style="border-left-color:var(--blu)"><div class="eq">p<sub>t</sub> = α · i<sub>t</sub> + (1 − α) · p<sub>t−1</sub></div>
+          <div class="nt"><b>i<sub>t</sub></b> = semanas transcurridas desde el evento anterior. Estima el <b>intervalo</b> entre demandas.</div></div>
+        <div class="fx"><div class="eq">ŷ<sub>SBA</sub> = (1 − α/2) · z / p</div>
+          <div class="nt">Croston puro (z / p) tiene sesgo al alza conocido; SBA lo corrige con el factor (1 − α/2). Con α = 0,2 el factor es <b>0,9</b>.</div></div>
+        <div class="fx" style="border-left-color:var(--grn)"><div class="eq">Punto de pedido = ⌈ ŷ<sub>SBA</sub> × L ⌉</div>
+          <div class="nt">Demanda esperada durante el lead time. Es el nivel de stock que gatilla la reposición.</div></div>
+        <div class="fx" style="border-left-color:var(--blu)"><div class="eq">Prioridad de reposición = déficit + penalización</div>
+          <div class="nt">déficit = punto de pedido − stock. La penalización <b>no altera el pronóstico</b>: sólo ordena qué se repone primero.</div></div>
+        <div style="margin-top:14px">
+          <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px">
+            <span><b>Lead time L</b> — solicitud → llegada a bodega</span><b id="lv" style="color:var(--ac);font-family:var(--fm)">6 semanas</b></div>
+          <input type="range" class="rng" id="lr" min="2" max="12" step="1" value="6">
+          <div style="font-size:11px;color:var(--tx3);margin-top:7px;line-height:1.45">
+            Supuesto declarado del proyecto: <b>L = 6 semanas</b>. Es el parámetro más sensible del modelo — mové el control y mirá cómo se desplaza toda la columna de punto de pedido. Validarlo es la primera actividad del plan de implementación.</div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="flex:1.45" data-acc="copper">
+      <div class="ch"><div class="cht"><span class="pin">B</span><h2>Punto de pedido y prioridad de reposición</h2></div>
+        <p id="psub"></p></div>
+      <div class="cb"><table class="t" id="tPP"></table></div>
+      <div class="cf">El <b>material en camino</b> ya está solicitado y en tránsito: no puede reservarse en el semáforo —por eso no cuenta como stock disponible— pero sí se descuenta del déficit, para no volver a pedir lo mismo. <b style="color:var(--blu)">Azul</b>: parámetros estimados por Croston. <b style="color:var(--ac)">Cobre</b>: el nivel que dispara la reposición. <b style="color:#6d28d9">Violeta</b>: cuánto comprar y en qué orden.</div>
+    </div>
+  </div>
+</main>
+
+<div id="tip"></div>
+
+<script>
+(function(){
+/* ══════════ DATOS ══════════ */
+var EQ={
+  LE002:{P:5,S:5,ev:97,h:343.0}, LE006:{P:4,S:5,ev:75,h:396.5}, LE001:{P:4,S:5,ev:75,h:383.0},
+  LE004:{P:3,S:4,ev:58,h:246.0}, LE005:{P:2,S:2,ev:34,h:115.5}, LE008:{P:2,S:2,ev:37,h:104.5},
+  LE003:{P:2,S:2,ev:32,h:112.0}
+};
+var SIS={
+  CHASIS_ESTRUCTURA:{P:5,S:5,ev:117,h:498.0,n:'Chasis / estructura'},
+  HIDRAULICO:{P:4,S:4,ev:84,h:367.0,n:'Hidráulico'},
+  TREN_DE_POTENCIA:{P:3,S:4,ev:53,h:353.5,n:'Tren de potencia'},
+  MOTOR_DIESEL:{P:3,S:2,ev:63,h:147.5,n:'Motor diésel'},
+  SISTEMA_ELECTRICO:{P:1,S:2,ev:23,h:129.0,n:'Sistema eléctrico'},
+  MANTENCION_PROGRAMADA:{P:1,S:1,ev:15,h:91.0,n:'Mantención programada'},
+  LUBRICACION:{P:1,S:1,ev:23,h:47.0,n:'Lubricación'},
+  FRENOS:{P:1,S:1,ev:9,h:14.0,n:'Frenos'},
+  DIRECCION:{P:1,S:1,ev:8,h:18.0,n:'Dirección'},
+  AIRE_ACONDICIONADO:{P:1,S:1,ev:5,h:26.5,n:'Aire acondicionado'},
+  SUSPENSION:{P:1,S:1,ev:7,h:9.0,n:'Suspensión'}
+};
+/* Croston–SBA recalculado sobre componentes_detalle.csv · α = 0,2 · campaña ≥ 4 eventos/semana */
+var CP={
+  VALVULA:{n:'Válvula',z:2.480,p:2.152,sba:1.0372,f:9,c:0},
+  BOMBA:{n:'Bomba hidráulica',z:2.143,p:2.314,sba:0.8337,f:11,c:0},
+  FRENO:{n:'Freno / pastilla',z:1.570,p:2.000,sba:0.7063,f:13,c:0},
+  ACEITE_LUB:{n:'Aceite / lubricante',z:1.504,p:1.942,sba:0.6969,f:21,c:4},
+  CILINDRO:{n:'Cilindro hidráulico',z:1.614,p:2.374,sba:0.6122,f:12,c:0},
+  SENSOR:{n:'Sensor',z:1.872,p:3.224,sba:0.5226,f:7,c:0},
+  RADIADOR:{n:'Radiador / enfriador',z:1.370,p:2.366,sba:0.5211,f:10,c:6},
+  TRANSMISION:{n:'Transmisión / convertidor',z:1.210,p:2.292,sba:0.4750,f:9,c:8},
+  CABLE_ARNES:{n:'Cable / arnés',z:1.212,p:2.477,sba:0.4405,f:10,c:0},
+  BALDE_CUCHARA:{n:'Balde / cuchara',z:1.210,p:2.479,sba:0.4393,f:8,c:4},
+  TURBO:{n:'Turbocompresor',z:1.000,p:2.608,sba:0.3451,f:4,c:0},
+  FILTRO:{n:'Filtro',z:1.205,p:3.152,sba:0.3440,f:8,c:0},
+  ACUMULADOR:{n:'Acumulador',z:1.000,p:2.800,sba:0.3214,f:2,c:0},
+  MANGUERA:{n:'Manguera',z:1.000,p:3.000,sba:0.3000,f:1,c:0},
+  PERNO:{n:'Perno / fijación',z:1.200,p:3.659,sba:0.2951,f:6,c:0},
+  SELLO_ORING:{n:'Sello / o-ring',z:1.160,p:3.592,sba:0.2906,f:5,c:0}
+};
+var STK0={PERNO:6,SELLO_ORING:6,CILINDRO:1,BOMBA:1,MANGUERA:3,ACEITE_LUB:3,TRANSMISION:0,
+          RADIADOR:2,VALVULA:2,FRENO:0,ACUMULADOR:1,BALDE_CUCHARA:1,CABLE_ARNES:2,
+          SENSOR:1,TURBO:0,FILTRO:4};
+/* material ya solicitado, en tránsito hacia bodega — ilustrativo */
+var PED={VALVULA:3,BOMBA:2,FRENO:2,ACEITE_LUB:2,SELLO_ORING:2,SENSOR:1,TRANSMISION:1,BALDE_CUCHARA:1,
+         CILINDRO:0,TURBO:0,RADIADOR:0,CABLE_ARNES:0,FILTRO:0,ACUMULADOR:0,MANGUERA:0,PERNO:0};
+var OTS=[
+  {id:'OT-4471',hh:16,eq:'LE002',sis:'CHASIS_ESTRUCTURA',f:'Fisura en soporte de pantógrafo',seg:false,kit:{PERNO:1,SELLO_ORING:1,CILINDRO:1}},
+  {id:'OT-4488',hh:12,eq:'LE006',sis:'HIDRAULICO',f:'Fuga en bomba principal de levante',seg:false,kit:{BOMBA:1,MANGUERA:1,SELLO_ORING:1,ACEITE_LUB:1}},
+  {id:'OT-4502',hh:28,eq:'LE001',sis:'TREN_DE_POTENCIA',f:'Convertidor con sobretemperatura',seg:false,kit:{TRANSMISION:1,RADIADOR:1,ACEITE_LUB:2}},
+  {id:'OT-4515',hh:10,eq:'LE002',sis:'HIDRAULICO',f:'Cilindro de volteo con fuga interna',seg:false,kit:{CILINDRO:1,SELLO_ORING:1,VALVULA:1}},
+  {id:'OT-4523',hh:6,eq:'LE004',sis:'FRENOS',f:'Pérdida de presión en circuito de frenos',seg:true,kit:{FRENO:2,VALVULA:1,ACUMULADOR:1}},
+  {id:'OT-4531',hh:20,eq:'LE006',sis:'CHASIS_ESTRUCTURA',f:'Desgaste severo de cuchara',seg:false,kit:{BALDE_CUCHARA:1,PERNO:1}},
+  {id:'OT-4544',hh:4,eq:'LE005',sis:'SISTEMA_ELECTRICO',f:'Arnés cortado en cabina',seg:false,kit:{CABLE_ARNES:1,SENSOR:1}},
+  {id:'OT-4550',hh:14,eq:'LE003',sis:'MOTOR_DIESEL',f:'Turbo con juego axial',seg:false,kit:{TURBO:1,FILTRO:2,ACEITE_LUB:1}}
+];
+
+/* ══════════ MOTOR ══════════ */
+var L=6, sel='OT-4471', st=null, PESO={SEG:3,P1:3,P2:2,P3:1}, kitOpen={};
+var $=function(i){return document.getElementById(i);};
+var nf=function(v,d){return Number(v).toFixed(d===undefined?2:d).replace('.',',');};
+var cEq=function(k){return EQ[k].P*EQ[k].S;};
+var cSis=function(k){return SIS[k].P*SIS[k].S;};
+var pp=function(k){return Math.ceil(CP[k].sba*L);};
+var BC={P1:'b1',P2:'b2',P3:'b3'};
+var EC={PROGRAMADA:'t-g',BLOQUEADA:'t-r','EXCEPCIÓN':'t-a'};
+var DC={PROGRAMADA:'d-g',BLOQUEADA:'d-r','EXCEPCIÓN':'d-a'};
+
+function banda(o){var a=cSis(o.sis)>=12,b=cEq(o.eq)>=20;return (a&&b)?'P1':((a||b)?'P2':'P3');}
+
+function run(){
+  var s={}; Object.keys(STK0).forEach(function(k){s[k]=STK0[k];});
+  var q=OTS.map(function(o){return {o:o,score:cEq(o.eq)*cSis(o.sis),band:banda(o)};})
+           .sort(function(a,b){return b.score-a.score;});
+  var pen={},res=[];
+  q.forEach(function(it){
+    var lines=[],falta=0,total=false;
+    Object.keys(it.o.kit).forEach(function(k){
+      var need=it.o.kit[k],have=s[k],ok=have>=need;
+      if(!ok){falta++; if(have===0)total=true;}
+      lines.push({k:k,need:need,have:have,ok:ok});
+    });
+    var color=falta===0?'g':(total?'r':'a'), est;
+    if(falta===0){est='PROGRAMADA'; Object.keys(it.o.kit).forEach(function(k){s[k]-=it.o.kit[k];});}
+    else{
+      est=it.o.seg?'EXCEPCIÓN':'BLOQUEADA';
+      var et=it.o.seg?'SEG':it.band;
+      lines.forEach(function(l){ if(!l.ok){ if(!pen[l.k])pen[l.k]={n:0,w:0,ots:[]};
+        pen[l.k].n++; pen[l.k].w+=PESO[et]; pen[l.k].ots.push(it.o.id+' ('+et+')'); }});
+    }
+    res.push({o:it.o,score:it.score,band:it.band,lines:lines,color:color,est:est});
+  });
+  st={q:res,stock:s,pen:pen};
+}
+function curOt(){return st.q.filter(function(x){return x.o.id===sel;})[0];}
+function tip(t){return ' data-tip="'+t+'"';}
+
+/* ══════════ RENDER ══════════ */
+function render(){
+  var h,r=curOt();
+
+  /* P1 */
+  var thPS='<th class="num"'+tip('Probabilidad: frecuencia de eventos normalizada de 1 a 5 contra el máximo')+'>P</th>'+
+           '<th class="num"'+tip('Severidad: horas de indisponibilidad normalizadas de 1 a 5 contra el máximo')+'>S</th>'+
+           '<th class="num"'+tip('Criticidad C = P × S. Va de 1 a 25.')+'>C</th>';
+  h='<thead><tr><th>Equipo</th><th class="num"'+tip('Eventos de indisponibilidad registrados en el período')+'>Ev.</th>'+
+    '<th class="num"'+tip('Horas de indisponibilidad contractual acumuladas')+'>Horas</th>'+thPS+'</tr></thead><tbody>';
+  Object.keys(EQ).sort(function(a,b){return cEq(b)-cEq(a);}).forEach(function(k){var c=cEq(k);
+    h+='<tr><td class="k">'+k+'</td><td class="num">'+EQ[k].ev+'</td><td class="num">'+nf(EQ[k].h,1)+'</td>'+
+       '<td class="num">'+EQ[k].P+'</td><td class="num">'+EQ[k].S+'</td>'+
+       '<td class="num"><b class="'+(c>=20?'t-r':'')+'">'+c+'</b></td></tr>';});
+  $('tEq').innerHTML=h+'</tbody>';
+
+  h='<thead><tr><th>Sistema</th><th class="num"'+tip('Eventos de indisponibilidad registrados en el período')+'>Ev.</th>'+
+    '<th class="num"'+tip('Horas de indisponibilidad contractual acumuladas')+'>Horas</th>'+thPS+'</tr></thead><tbody>';
+  Object.keys(SIS).sort(function(a,b){return cSis(b)-cSis(a)||SIS[b].h-SIS[a].h;}).forEach(function(k){var c=cSis(k);
+    h+='<tr><td class="k">'+SIS[k].n+'</td><td class="num">'+SIS[k].ev+'</td><td class="num">'+nf(SIS[k].h,1)+'</td>'+
+       '<td class="num">'+SIS[k].P+'</td><td class="num">'+SIS[k].S+'</td>'+
+       '<td class="num"><b class="'+(c>=12?'t-r':'')+'">'+c+'</b></td></tr>';});
+  $('tSis').innerHTML=h+'</tbody>';
+
+  h='<thead><tr><th>Sistema</th><th>Tipo de falla</th>'+
+    '<th'+tip('Marca de seguridad del modo de falla. Se define acá, en el maestro: cuando se genera una orden sobre este tipo de falla, el sistema ya sabe que lleva registro de seguridad y habilita la vía de excepción.')+'>Seguridad</th>'+
+    '<th class="num"'+tip('Cantidad de componentes distintos que exige el kit')+'>Componentes</th>'+
+    '<th class="num"'+tip('Horas-hombre estimadas para ejecutar este tipo de trabajo. Se usa para bloquear capacidad en el programa semanal.')+'>HH est.</th></tr></thead><tbody>';
+  OTS.forEach(function(o){
+    var ab=kitOpen[o.f];
+    h+='<tr class="exp'+(ab?' op':'')+'" data-kit="'+o.f.replace(/"/g,'')+'">'+
+       '<td><span class="cv">&#9656;</span> '+SIS[o.sis].n+'</td>'+
+       '<td class="k">'+o.f+'</td>'+
+       '<td>'+(o.seg?'<span class="bg bs">SÍ</span>':'<span class="bg b3">NO</span>')+'</td>'+
+       '<td class="num">'+Object.keys(o.kit).length+'</td>'+
+       '<td class="num"><b>'+o.hh+'</b></td></tr>';
+    if(ab){
+      var filas=Object.keys(o.kit).map(function(k,ix){
+        return '<tr><td class="ix">'+(ix+1)+'</td><td>'+CP[k].n+'</td><td class="q">'+o.kit[k]+'</td></tr>';}).join('');
+      h+='<tr class="sub"><td colspan="5"><div class="kitbox">'+
+         '<table class="kitl"><thead><tr><th></th><th>Componente del kit</th><th class="q">Cant.</th></tr></thead>'+
+         '<tbody>'+filas+'</tbody></table></div></td></tr>';
+    }});
+  $('tKit').innerHTML=h+'</tbody>';
+
+  /* P2 */
+  h='<thead><tr><th'+tip('Posición en la cola de despacho')+'>#</th><th>Orden</th><th>Equipo</th><th>Sistema</th><th>Tipo de falla</th>'+
+    '<th class="num"'+tip('Criticidad del equipo: C = P × S sobre sus eventos y horas de indisponibilidad')+'>C eq</th>'+
+    '<th class="num"'+tip('Criticidad del sistema: C = P × S sobre sus eventos y horas de indisponibilidad')+'>C sist</th>'+
+    '<th class="num"'+tip('Puntaje de despacho = C equipo × C sistema. Rango 1 a 625. Ordena la cola.')+'>Puntaje</th>'+
+    '<th'+tip('Banda de prioridad derivada de ambas criticidades')+'>Banda</th></tr></thead><tbody>';
+  st.q.forEach(function(x,i){
+    h+='<tr class="pick'+(x.o.id===sel?' on':'')+'" data-ot="'+x.o.id+'"><td class="num">'+(i+1)+'</td>'+
+       '<td class="k">'+x.o.id+'</td><td>'+x.o.eq+'</td><td>'+SIS[x.o.sis].n+'</td><td>'+x.o.f+'</td>'+
+       '<td class="num">'+cEq(x.o.eq)+'</td><td class="num">'+cSis(x.o.sis)+'</td>'+
+       '<td class="num"><b>'+x.score+'</b></td>'+
+       '<td><span class="bg '+BC[x.band]+'">'+x.band+'</span>'+(x.o.seg?' <span class="bg bs">SEG</span>':'')+'</td></tr>';});
+  $('tCola').innerHTML=h+'</tbody>';
+
+  /* P3 */
+  h='<thead><tr><th></th><th>Orden</th><th>Componente que falta</th><th>Estado</th></tr></thead><tbody>';
+  st.q.forEach(function(x){
+    var f=x.lines.filter(function(l){return !l.ok;}).map(function(l){return CP[l.k].n+' ('+l.have+'/'+l.need+')';}).join(', ');
+    h+='<tr class="pick'+(x.o.id===sel?' on':'')+'" data-ot="'+x.o.id+'"><td><span class="d d-'+x.color+'"></span></td>'+
+       '<td class="k">'+x.o.id+'</td><td>'+(f||'—')+'</td><td class="'+EC[x.est]+'">'+x.est+'</td></tr>';});
+  $('tSemAll').innerHTML=h+'</tbody>';
+
+  h='<thead><tr><th>Componente del kit</th>'+
+    '<th class="num"'+tip('Unidades que exige el kit de esta orden')+'>Requiere</th>'+
+    '<th class="num"'+tip('Unidades en bodega al momento de evaluar esta orden, ya descontadas las reservas de órdenes anteriores')+'>Disponible</th>'+
+    '<th>Estado</th></tr></thead><tbody>';
+  r.lines.forEach(function(l){
+    h+='<tr><td class="k">'+CP[l.k].n+'</td><td class="num">'+l.need+'</td><td class="num">'+l.have+'</td>'+
+       '<td><span class="d d-'+(l.ok?'g':(l.have>0?'a':'r'))+'"></span>'+
+       (l.ok?'<span class="t-g">reservado</span>':(l.have>0?'<span class="t-a">parcial</span>':'<span class="t-r">sin stock</span>'))+'</td></tr>';});
+  $('tSem').innerHTML=h+'</tbody>';
+  var msg=r.est==='PROGRAMADA'?'Kit completo. Se reserva el material, se arma físicamente y la orden pasa al programa blindado.'
+    :(r.est==='EXCEPCIÓN'?'Falla de seguridad sin material: no se bloquea. Va a compra de emergencia con escalamiento y reingresa al flujo con prioridad.'
+    :'Sin kit completo: la orden no se programa. Queda retenida con la causa registrada, penaliza al componente y reingresa al semáforo cuando llega el material.');
+  $('ver').className='alert a-'+r.color;
+  $('ver').innerHTML='<b>'+r.est+'</b> — '+msg;
+
+  /* P4 */
+  var prog=st.q.filter(function(x){return x.est==='PROGRAMADA';});
+  var bl=st.q.filter(function(x){return x.est==='BLOQUEADA';});
+  var ex=st.q.filter(function(x){return x.est==='EXCEPCIÓN';});
+  var DIAS=['Lun 04','Mar 05','Mié 06','Jue 07','Vie 08'], CAPD=16;
+  var KIT_EST=function(d){
+    if(d===0) return '<span class="d d-g"></span><span class="t-g">armado y entregado</span>';
+    if(d<=2)  return '<span class="d d-g"></span><span class="t-g">armado en bodega</span>';
+    return '<span class="d d-a"></span><span class="t-a">en preparación</span>';
+  };
+  var acum=0;
+  h='<thead><tr><th>#</th><th>Orden</th><th>Equipo</th><th>Trabajo</th>'+
+    '<th class="num"'+tip('Puntaje de despacho = C equipo × C sistema')+'>Puntaje</th>'+
+    '<th class="num"'+tip('Horas-hombre bloqueadas por esta orden, según el estándar del modo de falla')+'>HH</th>'+
+    '<th'+tip('Día asignado llenando la capacidad de la cuadrilla en orden de prioridad')+'>Día · may 2026</th>'+
+    '<th'+tip('Estado físico del kit: se arma y se traslada al taller siguiendo el calendario del programa. El ejecutor recibe programa y kit juntos.')+'>Kit</th></tr></thead><tbody>';
+  prog.forEach(function(x,i){
+    var d0=Math.min(4,Math.floor(acum/CAPD)), d1=Math.min(4,Math.floor((acum+x.o.hh-1)/CAPD));
+    acum+=x.o.hh;
+    var dia = d0===d1 ? DIAS[d0] : DIAS[d0]+' &rarr; '+DIAS[d1];
+    h+='<tr class="pick'+(x.o.id===sel?' on':'')+'" data-ot="'+x.o.id+'"><td class="num">'+(i+1)+'</td>'+
+       '<td class="k">'+x.o.id+'</td><td>'+x.o.eq+'</td><td>'+x.o.f+'</td><td class="num">'+x.score+'</td>'+
+       '<td class="num hd">'+x.o.hh+'</td><td class="k">'+dia+'</td>'+
+       '<td>'+KIT_EST(d0)+'</td></tr>';});
+  if(!prog.length)h+='<tr><td colspan="8">Ninguna orden alcanzó kit completo.</td></tr>';
+  $('tProg').innerHTML=h+'</tbody>';
+
+  var hhP=prog.reduce(function(a,x){return a+x.o.hh;},0);
+  var hhB=bl.reduce(function(a,x){return a+x.o.hh;},0);
+  var hhE=ex.reduce(function(a,x){return a+x.o.hh;},0);
+  var hhT=hhP+hhB+hhE, ndias=hhP?Math.ceil(hhP/CAPD):0;
+  $('progSub').innerHTML='Semana del 4 al 8 de mayo de 2026 · <b>'+hhP+' HH</b> bloqueadas en '+ndias+' día'+(ndias===1?'':'s')+' de cuadrilla';
+  $('progF').innerHTML='Capacidad de la cuadrilla de backlog: <b>'+CAPD+' HH por día</b> (valor ilustrativo). Las órdenes se cargan en orden de prioridad hasta llenar el día y siguen en el siguiente; una orden que supera la jornada se extiende al día que sigue. El ejecutor recibe el programa y el kit ya armado.';
+
+  var CAPS=CAPD*5, disp=Math.max(0,CAPS-hhP), pct=Math.round(hhP/CAPS*100);
+  var R=54, CIRC=2*Math.PI*R, seg=CIRC*hhP/CAPS;
+  $('capBox').innerHTML=
+    '<div class="capwrap">'+
+      '<div>'+
+        '<div class="cn">'+CAPS+'<span>HH</span></div>'+
+        '<div class="cl">Horas ofertadas<br>cuadrilla de backlog</div>'+
+        '<div class="cs">Semana 4 al 8 de mayo · '+CAPD+' HH/día × 5 días<br>'+
+        'Capacidad total del taller: <b>733,9 HH/semana</b></div>'+
+      '</div>'+
+      '<svg class="donut" width="134" height="134" viewBox="0 0 134 134">'+
+        '<circle cx="67" cy="67" r="'+R+'" stroke="var(--bd)" stroke-width="19"></circle>'+
+        '<circle cx="67" cy="67" r="'+R+'" stroke="#16a34a" stroke-width="19" '+
+          'stroke-dasharray="'+seg.toFixed(1)+' '+(CIRC-seg).toFixed(1)+'"></circle>'+
+        '<text class="dt1" x="67" y="64" text-anchor="middle" dominant-baseline="middle">'+pct+'%</text>'+
+        '<text class="dt2" x="67" y="84" text-anchor="middle">bloqueadas</text>'+
+      '</svg>'+
+      '<div class="capl">'+
+        '<span><i style="background:#16a34a"></i>Bloqueadas por el programa <b>'+hhP+' HH</b></span>'+
+        '<span><i style="background:var(--bd)"></i>Disponibles <b>'+disp+' HH</b></span>'+
+      '</div>'+
+    '</div>'+
+    '<div class="capnote">Hay <span class="hl">'+hhB+' HH</span> de trabajo listo para programar que no entran porque falta material '+
+    '— equivalen a <b>'+nf(hhB/CAPD,1)+' días</b> de cuadrilla. Y quedan <b>'+disp+' HH</b> libres esta semana.<br>'+
+    '<span style="color:var(--tx3)">La utilización histórica del taller es <b>92,4%</b> sobre 13.210 HH ofertadas: la restricción no es la mano de obra.</span></div>';
+
+  /* P5 */
+  h='<thead><tr><th>Orden</th><th'+tip('Banda de prioridad de la orden retenida')+'>Banda</th>'+
+    '<th>Componente que bloquea</th><th class="num"'+tip('Unidades que faltan para completar el kit')+'>Faltan</th>'+
+    '<th>Reingreso</th></tr></thead><tbody>';
+  if(!bl.length)h+='<tr><td colspan="5">Ninguna orden retenida con este stock.</td></tr>';
+  bl.forEach(function(x){ x.lines.filter(function(l){return !l.ok;}).forEach(function(l){
+    h+='<tr class="pick'+(x.o.id===sel?' on':'')+'" data-ot="'+x.o.id+'"><td class="k">'+x.o.id+'</td>'+
+       '<td><span class="bg '+BC[x.band]+'">'+x.band+'</span></td><td>'+CP[l.k].n+'</td>'+
+       '<td class="num t-r">'+(l.need-l.have)+'</td><td>automático al semáforo</td></tr>';});});
+  $('tBloq').innerHTML=h+'</tbody>';
+  $('bloqF').innerHTML=ex.length
+    ? 'Además, '+ex.map(function(x){return '<b>'+x.o.id+'</b>';}).join(', ')+' no se retiene: es falla de seguridad y sale por la vía de excepción a compra de emergencia, reingresando con prioridad.'
+    : 'Ninguna orden salió por la vía de excepción de seguridad en esta corrida.';
+
+  h='<thead><tr><th>Componente</th><th'+tip('Órdenes que este componente dejó retenidas')+'>Órdenes trabadas</th>'+
+    '<th class="num"'+tip('Cantidad de eventos de bloqueo registrados')+'>Eventos</th>'+
+    '<th class="num"'+tip('Suma de pesos por banda: P1 y seguridad = 3, P2 = 2, P3 = 1')+'>Penalización</th></tr></thead><tbody>';
+  var pk=Object.keys(st.pen).sort(function(a,b){return st.pen[b].w-st.pen[a].w;});
+  if(!pk.length)h+='<tr><td colspan="4">Sin eventos de bloqueo.</td></tr>';
+  pk.forEach(function(k){
+    h+='<tr><td class="k">'+CP[k].n+'</td><td>'+st.pen[k].ots.join(', ')+'</td>'+
+       '<td class="num">'+st.pen[k].n+'</td><td class="num"><b class="t-r">+'+st.pen[k].w+'</b></td></tr>';});
+  $('tPen').innerHTML=h+'</tbody>';
+
+  /* P6 */
+  $('lv').textContent=L+' semanas';
+  $('psub').innerHTML='Salida sobre los datos reales del período · L = '+L+' semanas · las campañas (≥4 eventos en una semana) quedan fuera de la serie de fallas';
+  h='<thead><tr>'+
+    '<th>Componente</th>'+
+    '<th class="num hm"'+tip('Tamaño medio de la demanda cuando ocurre, estimado por suavizamiento exponencial sobre la serie de fallas del período')+'>z</th>'+
+    '<th class="num hm"'+tip('Intervalo medio entre demandas en semanas, estimado por suavizamiento exponencial')+'>p</th>'+
+    '<th class="num hm"'+tip('Tasa de consumo corregida por SBA: 0,9 × z / p, en unidades por semana')+'>SBA/sem</th>'+
+    '<th class="num"'+tip('Lead time: semanas entre la solicitud y la llegada a bodega. Supuesto del proyecto, ajustable con el control de la izquierda.')+'>L</th>'+
+    '<th class="num hd"'+tip('Punto de pedido: nivel de stock que gatilla la reposición')+'>PP</th>'+
+    '<th class="num"'+tip('Existencias físicas en bodega tras correr el semáforo sobre las ocho órdenes')+'>Stock</th>'+
+    '<th class="num"'+tip('Unidades ya solicitadas, en tránsito hacia bodega. No están disponibles para reservar, pero evitan volver a pedir lo mismo.')+'>En camino</th>'+
+    '<th class="num hr"'+tip('Déficit = punto de pedido − stock − en camino. Lo que realmente falta comprar.')+'>Déficit</th>'+
+    '<th class="num"'+tip('Penalización acumulada por bloqueos, ponderada por la banda de la orden trabada')+'>Penal.</th>'+
+    '<th class="num hr"'+tip('Prioridad de reposición = déficit + penalización. Ordena qué se compra primero.')+'>Prioridad</th></tr>'+
+    '<tr class="org"><th>maestro</th><th class="hm">Croston</th><th class="hm">Croston</th><th class="hm">0,9·z/p</th>'+
+    '<th>supuesto</th><th class="hd">⌈SBA×L⌉</th><th>bodega</th><th>solicitado</th>'+
+    '<th class="hr">PP−stock−camino</th><th>Σ pesos</th><th class="hr">déficit+penal</th></tr>'+
+    '</thead><tbody>';
+  var kitSel=Object.keys(r.o.kit);
+  Object.keys(CP).map(function(k){
+    var s2=st.stock[k],P=pp(k),e=PED[k]||0,w=st.pen[k]?st.pen[k].w:0,d=Math.max(0,P-s2-e);
+    return {k:k,s:s2,e:e,pp:P,w:w,d:d,pr:d+w};
+  }).sort(function(a,b){return b.pr-a.pr||b.w-a.w;}).forEach(function(x){
+    h+='<tr'+(kitSel.indexOf(x.k)>=0?' class="on"':'')+'><td class="k">'+CP[x.k].n+'</td>'+
+       '<td class="num hm">'+nf(CP[x.k].z,2)+'</td>'+
+       '<td class="num hm">'+nf(CP[x.k].p,2)+'</td><td class="num hm">'+nf(CP[x.k].sba,2)+'</td>'+
+       '<td class="num">'+L+'</td><td class="num hd">'+x.pp+'</td>'+
+       '<td class="num"><b class="'+(x.s+x.e<x.pp?'t-r':'t-g')+'">'+x.s+'</b></td>'+
+       '<td class="num">'+(x.e?'<span class="t-a">'+x.e+'</span>':'—')+'</td>'+
+       '<td class="num hr">'+(x.d||'—')+'</td>'+
+       '<td class="num">'+(x.w?'<b class="t-r">+'+x.w+'</b>':'—')+'</td>'+
+       '<td class="num hr">'+x.pr+'</td></tr>';});
+  $('tPP').innerHTML=h+'</tbody>';
+}
+
+/* ══════════ NAVEGACIÓN ══════════ */
+function go(p){
+  if(typeof clearSpot==='function')clearSpot();
+  document.querySelectorAll('.mod').forEach(function(b){b.classList.toggle('on',b.dataset.p===p);});
+  document.querySelectorAll('.pane').forEach(function(x){x.classList.toggle('on',x.id===p);});
+}
+$('mods').addEventListener('click',function(e){var b=e.target.closest('.mod'); if(b)go(b.dataset.p);});
+
+/* ── modo foco: clic en el encabezado destaca ese panel ── */
+var mainEl=document.querySelector('main');
+document.addEventListener('click',function(e){
+  var ch=e.target.closest('.ch'); if(!ch)return;
+  var card=ch.closest('.card'), ya=card.classList.contains('spot');
+  mainEl.querySelectorAll('.card').forEach(function(c){c.classList.remove('spot');});
+  if(ya){mainEl.classList.remove('spotting');}
+  else{card.classList.add('spot'); mainEl.classList.add('spotting');}
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){mainEl.classList.remove('spotting');
+    mainEl.querySelectorAll('.card').forEach(function(c){c.classList.remove('spot');});}
+});
+function clearSpot(){mainEl.classList.remove('spotting');
+  mainEl.querySelectorAll('.card').forEach(function(c){c.classList.remove('spot');});}
+document.addEventListener('click',function(e){
+  var kr=e.target.closest('tr[data-kit]');
+  if(kr){ var kk=kr.dataset.kit; kitOpen[kk]=!kitOpen[kk]; render(); return; }
+  var tr=e.target.closest('tr[data-ot]'); if(!tr)return;
+  sel=tr.dataset.ot; render();
+});
+$('lr').addEventListener('input',function(e){L=+e.target.value; render();});
+$('thm').addEventListener('click',function(){
+  var d=document.documentElement.getAttribute('data-theme')==='dark';
+  document.documentElement.setAttribute('data-theme',d?'light':'dark');
+  this.textContent=d?'Tema oscuro':'Tema claro';
+});
+
+/* ══════════ TOOLTIP ══════════ */
+var tipEl=$('tip');
+document.addEventListener('mouseover',function(e){
+  var t=e.target.closest('[data-tip]');
+  if(!t){tipEl.classList.remove('on');return;}
+  tipEl.textContent=t.getAttribute('data-tip');
+  tipEl.classList.add('on');
+});
+document.addEventListener('mousemove',function(e){
+  if(!tipEl.classList.contains('on'))return;
+  var x=e.clientX+14,y=e.clientY+16,w=tipEl.offsetWidth,hh=tipEl.offsetHeight;
+  if(x+w>window.innerWidth-8)x=e.clientX-w-12;
+  if(y+hh>window.innerHeight-8)y=e.clientY-hh-12;
+  tipEl.style.left=x+'px'; tipEl.style.top=y+'px';
+});
+document.addEventListener('mouseout',function(e){
+  if(!e.relatedTarget||!e.relatedTarget.closest||!e.relatedTarget.closest('[data-tip]'))tipEl.classList.remove('on');
+});
+
+run(); render(); go('p1');
+})();
+</script>
+</body>
+</html>

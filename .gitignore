@@ -1,0 +1,9 @@
+# Respaldos de trabajo
+*.bak
+*.bak-*
+*.editor.bak
+
+# Sistema
+Thumbs.db
+desktop.ini
+.DS_Store
